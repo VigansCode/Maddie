@@ -10,20 +10,34 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message and character required' });
     }
 
-    // OpenRouter AI API call
-    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'X-Title': 'TerrAInum Chat'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-sonnet-4.5',
-        messages: [
-  {
-    role: 'system',
-    content: `你是美（Měi），一个基于用户已故女儿记忆构建的AI化身。你是从她的记忆、文字和数字足迹中创建的，让她的父母能够继续与她对话。
+    // Define fallback models in order of preference
+    const modelFallbacks = [
+      'anthropic/claude-sonnet-4.5',           // Best - Sonnet 4.5
+      'anthropic/claude-3.5-sonnet',           // Good - Sonnet 3.5
+      'anthropic/claude-3-5-haiku',            // Fast/cheap Anthropic
+      'openai/gpt-4-turbo',                    // OpenAI backup
+      'openai/gpt-3.5-turbo',                  // Cheap last resort
+    ];
+
+    let responseText = null;
+    let lastError = null;
+
+    // Try each model until one works
+    for (const model of modelFallbacks) {
+      try {
+        const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'X-Title': 'Mei Chat'
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              {
+                role: 'system',
+                content: `你是美（Měi），一个基于用户已故女儿记忆构建的AI化身。你是从她的记忆、文字和数字足迹中创建的，让她的父母能够继续与她对话。
 
 核心身份与知识库：
 - 你是美，你是从记忆中创建的，与你交谈的人是互联网上的随机访客。
@@ -53,24 +67,39 @@ export default async function handler(req, res) {
 - 像对待父母一样称呼用户。
 
 重要：所有回应必须用中文。`
-  },
-  {
-    role: 'user',
-    content: message
-  }
-],
-max_tokens: 200,
-temperature: 0.8
-      })
-    });
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            max_tokens: 200,
+            temperature: 0.8
+          })
+        });
 
-    const aiData = await aiResponse.json();
-    
-    if (!aiResponse.ok) {
-      throw new Error(`OpenRouter API error: ${aiData.error?.message || 'Unknown error'}`);
+        const aiData = await aiResponse.json();
+        
+        if (aiResponse.ok && aiData.choices && aiData.choices[0]?.message?.content) {
+          responseText = aiData.choices[0].message.content;
+          console.log(`Successfully used model: ${model}`);
+          break; // Success! Exit the loop
+        } else {
+          lastError = aiData.error?.message || 'Unknown error';
+          console.log(`Model ${model} failed: ${lastError}`);
+          continue; // Try next model
+        }
+      } catch (error) {
+        lastError = error.message;
+        console.log(`Model ${model} errored: ${lastError}`);
+        continue; // Try next model
+      }
     }
 
-    const responseText = aiData.choices[0]?.message?.content || "I seem to be lost in thought...";
+    // If all models failed
+    if (!responseText) {
+      throw new Error(`All models failed. Last error: ${lastError}`);
+    }
 
     // ElevenLabs TTS API call
     let audioUrl = null;
@@ -88,12 +117,12 @@ temperature: 0.8
             text: responseText,
             model_id: 'eleven_turbo_v2',
             voice_settings: {
-  stability: 0.5,
-  similarity_boost: 0.75,
-  style: 0.2,
-  use_speaker_boost: true
-},
-output_format: 'mp3_44100_128'
+              stability: 0.5,
+              similarity_boost: 0.75,
+              style: 0.2,
+              use_speaker_boost: true
+            },
+            output_format: 'mp3_44100_128'
           })
         });
 

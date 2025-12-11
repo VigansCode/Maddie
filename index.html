@@ -120,6 +120,21 @@
             opacity: 0;
             transition: opacity 2s ease;
             text-align: center;
+            cursor: pointer;
+        }
+        
+        #ambient-text:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        #ambient-text.copied {
+            color: #4ade80;
+            animation: copyPulse 0.5s ease;
+        }
+        
+        @keyframes copyPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
         }
 
         #social-buttons {
@@ -449,6 +464,12 @@
                 chatInput.addEventListener('keypress', handleChatInput);
             }
             
+            // Add click-to-copy for contract address
+            const ambientText = document.getElementById('ambient-text');
+            if (ambientText) {
+                ambientText.addEventListener('click', copyContractAddress);
+            }
+            
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -476,6 +497,45 @@
                 };
             }
         });
+        
+        function copyContractAddress() {
+            const contractAddress = '0x7ac8809d430659ff6505ecf7dc563ca7dbd94444';
+            const ambientText = document.getElementById('ambient-text');
+            
+            navigator.clipboard.writeText(contractAddress).then(() => {
+                // Visual feedback
+                const originalText = ambientText.textContent;
+                ambientText.classList.add('copied');
+                ambientText.textContent = '✓ 已复制到剪贴板!';
+                
+                setTimeout(() => {
+                    ambientText.classList.remove('copied');
+                    ambientText.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = contractAddress;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    ambientText.classList.add('copied');
+                    const originalText = ambientText.textContent;
+                    ambientText.textContent = '✓ 已复制到剪贴板!';
+                    setTimeout(() => {
+                        ambientText.classList.remove('copied');
+                        ambientText.textContent = originalText;
+                    }, 2000);
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                }
+                document.body.removeChild(textArea);
+            });
+        }
         
         function toggleMic() {
             if (!recognition) {

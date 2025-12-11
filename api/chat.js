@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         'X-Title': 'TerrAInum Chat'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-sonnet-4-20250514',
+        model: 'anthropic/claude-sonnet-4.5',
         messages: [
   {
     role: 'system',

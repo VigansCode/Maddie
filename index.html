@@ -338,7 +338,7 @@
     <!-- Terrarium Container -->
     <div id="terrarium-container">        
         <div id="ambient-text">
-            MeiYongWorld: 0x7ac8809d430659ff6505ecf7dc563ca7dbd94444
+            MeiYongWorld | CA: TBA
         </div>
 
         <div id="social-buttons">
@@ -510,42 +510,17 @@
         });
         
         function copyContractAddress() {
-            const contractAddress = '0x7ac8809d430659ff6505ecf7dc563ca7dbd94444';
             const ambientText = document.getElementById('ambient-text');
+            const originalText = ambientText.textContent;
             
-            navigator.clipboard.writeText(contractAddress).then(() => {
-                // Visual feedback
-                const originalText = ambientText.textContent;
-                ambientText.classList.add('copied');
-                ambientText.textContent = '✓ 已复制到剪贴板!';
-                
-                setTimeout(() => {
-                    ambientText.classList.remove('copied');
-                    ambientText.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = contractAddress;
-                textArea.style.position = 'fixed';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    ambientText.classList.add('copied');
-                    const originalText = ambientText.textContent;
-                    ambientText.textContent = '✓ 已复制到剪贴板!';
-                    setTimeout(() => {
-                        ambientText.classList.remove('copied');
-                        ambientText.textContent = originalText;
-                    }, 2000);
-                } catch (err) {
-                    console.error('Fallback copy failed:', err);
-                }
-                document.body.removeChild(textArea);
-            });
+            // Show coming soon message instead of copying
+            ambientText.classList.add('copied');
+            ambientText.textContent = '✓ Coming Soon!';
+            
+            setTimeout(() => {
+                ambientText.classList.remove('copied');
+                ambientText.textContent = originalText;
+            }, 2000);
         }
         
         function toggleMic() {

@@ -513,12 +513,12 @@
             const ambientText = document.getElementById('ambient-text');
             const fullText = ambientText.textContent;
             
-            // Extract whatever is after the pipe
-            const parts = fullText.split('|');
-            if (parts.length > 1) {
-                const caText = parts[1].trim().replace(/^合约:\s*/, '').replace(/^CA:\s*/, '');
+            // Get everything after the last colon and trim
+            const lastColonIndex = fullText.lastIndexOf(':');
+            if (lastColonIndex !== -1) {
+                const textToCopy = fullText.substring(lastColonIndex + 1).trim();
                 
-                navigator.clipboard.writeText(caText).then(() => {
+                navigator.clipboard.writeText(textToCopy).then(() => {
                     const originalText = fullText;
                     ambientText.classList.add('copied');
                     ambientText.textContent = '✓ 已复制！';

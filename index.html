@@ -513,56 +513,24 @@
             const ambientText = document.getElementById('ambient-text');
             const fullText = ambientText.textContent;
             
-            // Extract CA from text (everything after "合约: " or "CA: ")
-            const caMatch = fullText.match(/(?:合约:|CA:)\s*(.+)$/);
-            
-            if (!caMatch || caMatch[1].trim() === '待定' || caMatch[1].trim() === 'TBA') {
-                // If no CA yet, show coming soon
-                const originalText = fullText;
-                ambientText.classList.add('copied');
-                ambientText.textContent = '✓ 即将推出！';
+            // Extract whatever is after the pipe
+            const parts = fullText.split('|');
+            if (parts.length > 1) {
+                const caText = parts[1].trim().replace(/^合约:\s*/, '').replace(/^CA:\s*/, '');
                 
-                setTimeout(() => {
-                    ambientText.classList.remove('copied');
-                    ambientText.textContent = originalText;
-                }, 2000);
-                return;
-            }
-            
-            const contractAddress = caMatch[1].trim();
-            
-            navigator.clipboard.writeText(contractAddress).then(() => {
-                const originalText = fullText;
-                ambientText.classList.add('copied');
-                ambientText.textContent = '✓ 已复制！';
-                
-                setTimeout(() => {
-                    ambientText.classList.remove('copied');
-                    ambientText.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = contractAddress;
-                textArea.style.position = 'fixed';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
+                navigator.clipboard.writeText(caText).then(() => {
                     const originalText = fullText;
                     ambientText.classList.add('copied');
                     ambientText.textContent = '✓ 已复制！';
+                    
                     setTimeout(() => {
                         ambientText.classList.remove('copied');
                         ambientText.textContent = originalText;
                     }, 2000);
-                } catch (err) {
-                    console.error('Fallback copy failed:', err);
-                }
-                document.body.removeChild(textArea);
-            });
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                });
+            }
         }
         
         function toggleMic() {
